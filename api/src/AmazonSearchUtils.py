@@ -11,6 +11,11 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 cached_search_page_file_name = "cached_search_page.html"
 cached_search_page_file_path = os.path.join(dir_path, "cached_pages", cached_search_page_file_name)
 
+class Record():
+    def __str__(self, value, time):
+        self.value = value
+        self.time = time
+
 class AmazonProductInfo:
 
     def __init__(self, link, name):
@@ -19,19 +24,32 @@ class AmazonProductInfo:
 
         self.current_num_reviews = ""
         self.current_review_ratio = ""
-        self.review_stat_update_date = None
+        self.num_review_history = []
+        self.review_ratio_history = []
 
         self.price = None
-        self.price_update_date = None
+        self.price_history = []
 
     def set_current_review_stats(self, num_reviews, review_ratio):
         self.current_num_reviews = num_reviews
         self.current_review_ratio = review_ratio
-        self.review_stat_update_date = datetime.datetime.now().microsecond
+        t = datetime.datetime.now().microsecond
+        self.num_review_history.append(Record(num_reviews, t))
+        self.review_ratio_history.append(Record(review_ratio, t))
 
     def set_current_price(self, price):
         self.price = price
-        self.price_update_date = datetime.datetime.now().microsecond
+        t = datetime.datetime.now().microsecond
+        self.price_history.append(Record(price, t))
+
+    def get_most_recent_num_review_update(self):
+        return self.num_review_history[-1].time
+
+    def get_most_recent_review_ratio_update(self):
+        return self.review_ratio_history[-1].time
+
+    def get_most_recent_price_udpate(self):
+        return self.price_history[-1].time
 
     def __str__(self):
         s = "Item: {}\nLink: {}".format(self.name, self.link)
@@ -111,8 +129,8 @@ def get_search_page_results(phrase, use_cached=False):
             pass
     return products
 
-def get_product_info(product):
-    url = product['url']
+def get_product_info(url):
+    product = {}
     r = requests.get(url=url, headers=HEADERS)
     html = r.content
     # file = open("product.html", "w")
