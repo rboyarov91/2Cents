@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import os
+import numpy as np
+import datetime
 
 HEADERS ={
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
@@ -8,6 +10,48 @@ HEADERS ={
 dir_path = os.path.dirname(os.path.realpath(__file__))
 cached_search_page_file_name = "cached_search_page.html"
 cached_search_page_file_path = os.path.join(dir_path, "cached_pages", cached_search_page_file_name)
+
+class AmazonProductInfo:
+
+    def __init__(self, link, name):
+        self.link = link
+        self.name = name
+
+        self.current_num_reviews = ""
+        self.current_review_ratio = ""
+        self.review_stat_update_date = None
+
+        self.price = None
+        self.price_update_date = None
+
+    def set_current_review_stats(self, num_reviews, review_ratio):
+        self.current_num_reviews = num_reviews
+        self.current_review_ratio = review_ratio
+        self.review_stat_update_date = datetime.datetime.now().microsecond
+
+    def set_current_price(self, price):
+        self.price = price
+        self.price_update_date = datetime.datetime.now().microsecond
+
+    def __str__(self):
+        s = "Item: {}\nLink: {}".format(self.name, self.link)
+        if self.price is not None:
+            s = "{}\nprice: ${}".format(s, self.price)
+        if self.current_num_reviews is not None:
+            s = "{}\nCustomer Reviews: {}".format(s, self.current_num_reviews)
+        if self.current_review_ratio is not None:
+            s = "{}\nReviews: {}/5".format(s, self.current_review_ratio*100/20)
+        s = "{}\n".format(s)
+        return s
+
+def sort_by_num_reviews(products, descending=True):
+    #print [p.current_num_reviews for p in products]
+    products.sort(key=lambda x: x.current_num_reviews, reverse=descending)
+    return products
+
+def sort_by_review_score(products, descending=True):
+    products.sort(key=lambda x: x.current_review_ratio, reverse=descending)
+    return products
 
 
 def get_search_page_results(phrase, use_cached=False):
@@ -38,16 +82,31 @@ def get_search_page_results(phrase, use_cached=False):
             if not link.startswith(url):
                 link = "{}{}".format(url, link)
             item = h2['data-attribute'].encode("utf-8")
-            price =  li.find("span", attrs={"class":"a-offscreen"}).contents[0].encode("utf-8")
             dollars = li.find("span", attrs={"class":"sx-price-whole"}).contents[0].encode("utf-8")
             cents = li.find("sup", attrs={"class":"sx-price-fractional"}).contents[0].encode("utf-8")
-            price = "${}.{}".format(dollars, cents)
-            product_dict = {
-                "name": item,
-                "price": price,
-                "url": link
-            }
-            products.append(product_dict)
+            price = "{}.{}".format(dollars, cents)
+            price = float(price)
+            try:
+                split_link = np.array(link.split("/"))
+                id = split_link[np.where(split_link == "dp")[0] + 1][0]
+                stars_string = li.find("span", attrs={"name":id}).find("i").find("span").contents[0].encode("utf-8")
+                top_value = float(stars_string.split(" ")[0])
+                bottom_value = float(stars_string.split(" ")[3])
+                ratio_percent = top_value / bottom_value
+            except Exception as e:
+                print e
+                ratio_percent = None
+            try:
+                num_reviews_string = li.find("span", attrs={"name":id}).parent.find("a", attrs={"class":"a-size-small"}).contents[0].encode("utf-8")
+                num_reviews = int(num_reviews_string.replace(",", ""))
+            except Exception as e:
+                print e
+                num_reviews = None
+
+            product = AmazonProductInfo(link, item)
+            product.set_current_price(price)
+            product.set_current_review_stats(num_reviews, ratio_percent)
+            products.append(product)
         except Exception as e:
             pass
     return products

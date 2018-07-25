@@ -3,7 +3,8 @@ import AmazonSearchUtils
 if __name__ == "__main__":
     phrase = "timex watch men"
     products = AmazonSearchUtils.get_search_page_results(phrase, use_cached=True)
-    print products
+    for p in AmazonSearchUtils.sort_by_review_score(products):
+        print p
     # updated_products = []
     # for product in products:
     #     updated_products.append(get_product_info(product))
