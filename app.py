@@ -1,12 +1,10 @@
 #!flask/bin/python
 from flask import Flask, jsonify, abort, make_response
-from flask_sqlalchemy import SQLAlchemy
 from db.src.models._Shared import db
 from db.src.models.Product import Product
 from db.src.models.History import History
 from db.src.models.HistoryTypes import HistoryTypes
-
-from datetime import datetime
+import db.src.init_db as init_db
 
 def configure_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
@@ -17,6 +15,7 @@ app = Flask(__name__)
 configure_app()
 db.init_app(app)
 db.app = app
+
 
 
 tasks = [
@@ -48,25 +47,24 @@ def get_task(task_id):
 if __name__ == '__main__':
     #app.run(debug=True)
     # Reset DB
-    db.drop_all()
-    db.create_all()
 
-    product = Product(id="001", link="Link001", name="Name001")
-    price_hist = HistoryTypes(id="001", type="price")
-    history = History(value=123)
-    history.type = price_hist
-    product.history.append(history)
-
-
-    db.session.add(product)
-    db.session.commit()
+    #print HistoryTypes.query.all()
+    #print HistoryTypes.query.filter_by(type='price').all()
+    init_db.create_tables()
+    init_db.initialize_tables()
     print HistoryTypes.query.all()
-    print History.query.all()
-    for p in Product.query.all():
-        print p
-        for h in p.history:
-            print h
-            print h.type.type
+    # db.create_all()
+    #
+    # product = Product(id="001", link="Link001", name="Name001")
+    # price_hist = HistoryTypes(id="001", type="price")
+    # history = History(value=123)
+    # history.type = price_hist
+    # product.history.append(history)
+    #
+    #
+    # db.session.add(product)
+    # db.session.commit()
+    #print HistoryTypes.query.all()
     #db.session.commit()
     #product = Product(id="12BB23", link="http://amazon.com", name="Test Product")
     #db.session.add(product)

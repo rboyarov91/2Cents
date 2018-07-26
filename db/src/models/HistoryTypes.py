@@ -6,3 +6,6 @@ class HistoryTypes(db.Model):
     type = db.Column(db.String, nullable=False)
     history_item = db.Column(db.Integer, db.ForeignKey('history.id'))
     history = db.relationship("History", back_populates="type")
+
+    def __repr__(self):
+        return '<history_types %r>' % self.type

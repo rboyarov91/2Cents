@@ -14,4 +14,4 @@ class History(db.Model):
     type = db.relationship('HistoryTypes', uselist=False, back_populates="history")
 
     def __repr__(self):
-        return '<History %r>' % self.id
+        return '<history %r>' % self.id

@@ -8,4 +8,4 @@ class Product(db.Model):
     history = db.relationship("History")
 
     def __repr__(self):
-        return '<ID %r>' % self.id
+        return '<product %r>' % self.id
