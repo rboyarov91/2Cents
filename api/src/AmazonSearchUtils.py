@@ -19,9 +19,9 @@ class HistoryRecord():
 class AmazonProductInfo:
 
     def __init__(self, link, name, id):
-        self.link = link
-        self.name = name
-        self.id = id
+        self.link = str(link)
+        self.name = str(name)
+        self.id = str(id)
 
         self.current_num_reviews = None
         self.current_review_ratio = None
@@ -163,4 +163,3 @@ def debug():
     p = AmazonProductInfo("http://www.amazon.com", "Name", "123")
     p.set_current_price(23)
     print p.id
-debug()

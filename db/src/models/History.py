@@ -6,7 +6,7 @@ from HistoryTypes import HistoryTypes
 class History(db.Model):
     __tablename__ = "history"
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.Integer, nullable=False)
+    value = db.Column(db.Float, nullable=False)
     add_date = db.Column(db.DateTime, nullable=False,
         default=datetime.utcnow)
 
