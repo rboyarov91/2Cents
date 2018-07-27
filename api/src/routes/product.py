@@ -1,5 +1,8 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request, make_response
 from db.src.models.Product import Product
+from collections import OrderedDict
+import json
+from api.src.utils import pretty_print_json
 
 product_bp = Blueprint("product", __name__)
 
@@ -13,12 +16,18 @@ def get_product_info(product_id):
             }
         )
     else:
-        return jsonify({
-            "name": product.name,
-            "url": product.link,
-            "price": product.get_current_price(),
-            "num_reviews": product.get_current_number_of_reviews(),
-            "review_ratio": product.get_current_review_ratio()
+        response = OrderedDict(
+            [
+                ("name", product.name),
+                ("url", product.link),
+                ("price", product.get_current_price()),
+                ("num_reviews", product.get_current_number_of_reviews()),
+                ("review_ratio", product.get_current_review_ratio())
+            ]
+        )
+        if request.args.get("format"):
+            return pretty_print_json(json.dumps(response))
+        else:
+            return jsonify(response)
 
-        })
 
