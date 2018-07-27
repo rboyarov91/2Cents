@@ -42,8 +42,8 @@ def populate_test_data():
             db.session.add(product)
             db.session.commit()
         except Exception as e:
-            print "Broke on this product"
-            print e
-            print p
+            # print "Broke on this product"
+            # print e
+            # print p
             db.session.rollback()
 

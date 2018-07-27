@@ -12,6 +12,7 @@ class History(db.Model):
 
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
     type = db.relationship('HistoryTypes', uselist=False, back_populates="history")
+    type_id = db.Column(db.Integer, db.ForeignKey('history_types.id'))
 
     def __repr__(self):
         return '<history %r>' % self.id
