@@ -11,19 +11,20 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 cached_search_page_file_name = "cached_search_page.html"
 cached_search_page_file_path = os.path.join(dir_path, "cached_pages", cached_search_page_file_name)
 
-class Record():
-    def __str__(self, value, time):
+class HistoryRecord():
+    def __init__(self, value, time):
         self.value = value
         self.time = time
 
 class AmazonProductInfo:
 
-    def __init__(self, link, name):
+    def __init__(self, link, name, id):
         self.link = link
         self.name = name
+        self.id = id
 
-        self.current_num_reviews = ""
-        self.current_review_ratio = ""
+        self.current_num_reviews = None
+        self.current_review_ratio = None
         self.num_review_history = []
         self.review_ratio_history = []
 
@@ -34,13 +35,13 @@ class AmazonProductInfo:
         self.current_num_reviews = num_reviews
         self.current_review_ratio = review_ratio
         t = datetime.datetime.now().microsecond
-        self.num_review_history.append(Record(num_reviews, t))
-        self.review_ratio_history.append(Record(review_ratio, t))
+        self.num_review_history.append(HistoryRecord(num_reviews, t))
+        self.review_ratio_history.append(HistoryRecord(review_ratio, t))
 
     def set_current_price(self, price):
         self.price = price
         t = datetime.datetime.now().microsecond
-        self.price_history.append(Record(price, t))
+        self.price_history.append(HistoryRecord(price, t))
 
     def get_most_recent_num_review_update(self):
         return self.num_review_history[-1].time
@@ -104,28 +105,32 @@ def get_search_page_results(phrase, use_cached=False):
             cents = li.find("sup", attrs={"class":"sx-price-fractional"}).contents[0].encode("utf-8")
             price = "{}.{}".format(dollars, cents)
             price = float(price)
+            split_link = np.array(link.split("/"))
+            id = split_link[np.where(split_link == "dp")[0] + 1][0]
             try:
-                split_link = np.array(link.split("/"))
-                id = split_link[np.where(split_link == "dp")[0] + 1][0]
+
                 stars_string = li.find("span", attrs={"name":id}).find("i").find("span").contents[0].encode("utf-8")
                 top_value = float(stars_string.split(" ")[0])
                 bottom_value = float(stars_string.split(" ")[3])
                 ratio_percent = top_value / bottom_value
             except Exception as e:
-                print e
+                #print e
                 ratio_percent = None
             try:
                 num_reviews_string = li.find("span", attrs={"name":id}).parent.find("a", attrs={"class":"a-size-small"}).contents[0].encode("utf-8")
                 num_reviews = int(num_reviews_string.replace(",", ""))
             except Exception as e:
-                print e
+                #print e
                 num_reviews = None
-
-            product = AmazonProductInfo(link, item)
+            product = AmazonProductInfo(link, item, id)
+            #print product
             product.set_current_price(price)
             product.set_current_review_stats(num_reviews, ratio_percent)
+            #print product
             products.append(product)
         except Exception as e:
+            #print "Not adding"
+            #print e
             pass
     return products
 
@@ -155,6 +160,7 @@ def get_product_info(url):
     return product
 
 def debug():
-    with open(cached_search_page_file_path, 'r') as content_file:
-        content = content_file.read()
-    print content
+    p = AmazonProductInfo("http://www.amazon.com", "Name", "123")
+    p.set_current_price(23)
+    print p.id
+debug()
